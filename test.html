@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Daily Pulse Dashboard</title>
+<style>
+  :root{
+    --bg:#0e1230;         /* page background */
+    --card:#171b3a;       /* card background */
+    --muted:#9aa3b2;      /* secondary text */
+    --text:#e8ecf3;       /* main text */
+    --good:#32d36d;       /* green up */
+    --bad:#ff5c67;        /* red down */
+    --accent:#6a78ff;     /* subtle accent */
+    --radius:16px;
+    --gap:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font:500 14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+  }
+  .wrap{
+    max-width:1200px;
+    margin:24px auto 80px;
+    padding:0 16px;
+    display:grid;
+    grid-template-columns: 300px 1fr 1fr;
+    grid-template-rows: auto auto 1fr;
+    gap:var(--gap);
+    grid-template-areas:
+      "sales deals social"
+      "sales deals site"
+      "nps   feedback map";
+  }
+  .card{
+    background:var(--card);
+    border-radius:var(--radius);
+    padding:18px 18px;
+    box-shadow: 0 10px 24px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.03);
+  }
+  h3{
+    margin:0 0 14px;
+    font-size:18px;
+    font-weight:700;
+    letter-spacing:.2px;
+  }
+  .muted{color:var(--muted)}
+  .tiny{font-size:12px}
+  .up{color:var(--good)}
+  .down{color:var(--bad)}
+  /* Sales */
+  .sales{grid-area:sales; display:flex; flex-direction:column; gap:22px}
+  .num-xl{font-size:48px; font-weight:800; letter-spacing:.5px}
+  .num-l {font-size:32px; font-weight:800}
+  .pill{
+    display:inline-flex; align-items:center; gap:6px;
+    padding:4px 8px; border-radius:999px; background:rgba(50,211,109,.12); color:var(--good);
+    font-weight:600
+  }
+  /* Deals table */
+  .deals{grid-area:deals}
+  .table{width:100%; border-collapse:collapse}
+  .table th,.table td{
+    padding:10px 0; border-bottom:1px solid rgba(255,255,255,.06)
+  }
+  .table th{font-size:12px; text-transform:uppercase; letter-spacing:.12em; color:var(--muted)}
+  .table td:last-child{text-align:right; font-weight:700}
+  /* Social + Site small cards row-like */
+  .mini{
+    display:flex; gap:var(--gap);
+  }
+  .mini .card{flex:1}
+  .k{font-size:40px; font-weight:800}
+  .label{margin-top:-6px; color:var(--muted); font-weight:600}
+  .delta{margin-top:6px}
+  .social{grid-area:social}
+  .site{grid-area:site}
+  /* Map */
+  .map{grid-area:map; position:relative; overflow:hidden; min-height:420px}
+  .map svg{width:100%; height:100%; display:block; border-radius:12px}
+  .dot{fill:#8fe7ff; opacity:.9}
+  .corner-time{
+    position:absolute; right:16px; bottom:12px; font-weight:700; color:#cfd6ff; opacity:.9
+  }
+  /* NPS */
+  .nps{grid-area:nps; display:flex; flex-direction:column; gap:12px}
+  .gauge{
+    width:100%; aspect-ratio: 16/12; display:grid; place-items:center;
+    background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(0,0,0,.06));
+    border-radius:12px;
+  }
+  .nps-row{display:flex; align-items:center; gap:14px}
+  .nps-value{font-size:40px; font-weight:800}
+  /* Feedback */
+  .feedback{grid-area:feedback}
+  .feed-item{
+    display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,.06)
+  }
+  .bullet{
+    width:18px; height:18px; border-radius:50%; background:rgba(106,120,255,.25);
+    display:grid; place-items:center; font-size:11px; font-weight:800; color:#c7ceff
+  }
+  /* Footer bar */
+  .footer{
+    position:fixed; left:0; right:0; bottom:0;
+    background:rgba(23,27,58,.92); backdrop-filter:saturate(140%) blur(4px);
+    border-top:1px solid rgba(255,255,255,.06);
+    padding:10px 16px; display:flex; align-items:center; gap:10px; color:#cde7d9; font-weight:700
+  }
+  .check{width:18px; height:18px; border-radius:4px; background:#0cc56a; display:inline-block}
+  /* Responsive */
+  @media (max-width:1050px){
+    .wrap{
+      grid-template-columns:1fr 1fr;
+      grid-template-areas:
+        "sales social"
+        "deals site"
+        "map  map"
+        "nps  feedback";
+    }
+  }
+  @media (max-width:720px){
+    .wrap{
+      grid-template-columns:1fr;
+      grid-template-areas:
+        "sales"
+        "social"
+        "site"
+        "deals"
+        "map"
+        "nps"
+        "feedback";
+    }
+    .mini{flex-direction:column}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- Sales -->
+    <section class="card sales">
+      <h3>Sales</h3>
+      <div>
+        <div class="num-xl">$297<span class="tiny">K</span></div>
+        <div class="tiny muted">this month</div>
+        <div class="delta"><span class="pill">▲ $16k</span> <span class="tiny muted">vs last month</span></div>
+      </div>
+      <div>
+        <div class="num-l">$9.6<span class="tiny">K</span></div>
+        <div class="tiny muted">today</div>
+      </div>
+      <div>
+        <div class="num-l">$20.6<span class="tiny">K</span></div>
+        <div class="tiny muted">yesterday</div>
+      </div>
+    </section>
+
+    <!-- Biggest deals -->
+    <section class="card deals">
+      <h3>Biggest deals this month</h3>
+      <table class="table" role="grid" aria-label="Biggest deals">
+        <thead>
+          <tr><th>Lead</th><th>Value</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Alice</td><td>$8,600</td></tr>
+          <tr><td>Jared</td><td>$8,500</td></tr>
+          <tr><td>Heather</td><td>$7,540</td></tr>
+          <tr><td>Shaun</td><td>$7,450</td></tr>
+          <tr><td>Marsha</td><td>$6,530</td></tr>
+          <tr><td>Jared</td><td>$4,565</td></tr>
+          <tr><td>Heather</td><td>$4,560</td></tr>
+          <tr><td>Polly</td><td>$4,215</td></tr>
+          <tr><td>Dalisu</td><td>$3,560</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Social + Website -->
+    <section class="social">
+      <div class="mini">
+        <div class="card">
+          <h3>Social followers</h3>
+          <div style="display:flex; gap:28px; align-items:flex-end; flex-wrap:wrap">
+            <div>
+              <div class="k">19.5<span class="tiny">K</span></div>
+              <div class="label">LinkedIn</div>
+              <div class="tiny up">▲ 11 v yday</div>
+            </div>
+            <div>
+              <div class="k">10.5<span class="tiny">K</span></div>
+              <div class="label">Twitter</div>
+              <div class="tiny up">▲ 22 v yday</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="site">
+      <div class="mini">
+        <div class="card">
+          <h3>Website (past 7 days)</h3>
+          <div style="display:flex; gap:28px; align-items:flex-end; flex-wrap:wrap">
+            <div>
+              <div class="k">27.2<span class="tiny">K</span></div>
+              <div class="label">Users</div>
+              <div class="tiny up">▲ 1.6k vs last week</div>
+            </div>
+            <div>
+              <div class="k">126</div>
+              <div class="label">Enquiries</div>
+              <div class="tiny down">▼ 28 vs last week</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Map (stylized SVG with dots) -->
+    <section class="card map" aria-label="Active users">
+      <h3 style="margin-bottom:14px">Active users</h3>
+      <!-- Simple US map silhouette path (public domain style) -->
+      <svg viewBox="0 0 1000 560" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs>
+          <linearGradient id="land" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0" stop-color="#242a5a"/>
+            <stop offset="1" stop-color="#1d224a"/>
+          </linearGradient>
+        </defs>
+        <rect x="0" y="0" width="100%" height="100%" fill="url(#land)" rx="12"/>
+        <!-- rough land shape -->
+        <path d="M45,340 C120,250 220,240 300,260 C360,270 410,250 470,270 C520,285 560,275 600,280 C650,285 705,265 750,295 C800,330 860,330 910,320 L930,350 L905,390 L820,420 L700,460 L560,470 L380,460 L240,420 L140,390 L60,360 Z"
+              fill="#2a2f61" opacity=".9"/>
+        <!-- dots -->
+        <circle class="dot" cx="770" cy="225" r="5"/>
+        <circle class="dot" cx="860" cy="185" r="5"/>
+        <circle class="dot" cx="735" cy="275" r="5"/>
+        <circle class="dot" cx="680" cy="315" r="5"/>
+        <circle class="dot" cx="610" cy="350" r="5"/>
+        <circle class="dot" cx="520" cy="280" r="5"/>
+        <circle class="dot" cx="460" cy="320" r="5"/>
+        <circle class="dot" cx="400" cy="420" r="5"/>
+        <circle class="dot" cx="305" cy="355" r="5"/>
+        <circle class="dot" cx="250" cy="300" r="5"/>
+        <circle class="dot" cx="200" cy="330" r="5"/>
+        <circle class="dot" cx="135" cy="365" r="5"/>
+        <circle class="dot" cx="520" cy="510" r="5"/>
+      </svg>
+      <div class="corner-time">13:33</div>
+    </section>
+
+    <!-- NPS -->
+    <section class="card nps">
+      <h3>NPS (past 30 days)</h3>
+      <div class="gauge" aria-label="NPS gauge 61">
+        <!-- static semicircle gauge -->
+        <svg viewBox="0 0 200 130" width="100%" height="100%" aria-hidden="true">
+          <defs>
+            <linearGradient id="g" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0" stop-color="#ff6b6b"/>
+              <stop offset="0.5" stop-color="#ffd66b"/>
+              <stop offset="1" stop-color="#19d37a"/>
+            </linearGradient>
+          </defs>
+          <path d="M20,110 A80,80 0 1,1 180,110" fill="none" stroke="url(#g)" stroke-width="26" stroke-linecap="round"/>
+          <!-- ticks -->
+          <g stroke="rgba(255,255,255,.25)" stroke-width="2">
+            <line x1="20" y1="110" x2="32" y2="110"/>
+            <line x1="180" y1="110" x2="168" y2="110"/>
+          </g>
+          <!-- needle roughly at 61% -->
+          <g transform="translate(100,110)">
+            <line x1="0" y1="0" x2="36" y2="-40" stroke="#e8ecf3" stroke-width="3"/>
+            <circle cx="0" cy="0" r="5" fill="#e8ecf3"/>
+          </g>
+          <text x="10" y="124" font-size="10" fill="rgba(255,255,255,.6)">0</text>
+          <text x="186" y="124" font-size="10" text-anchor="end" fill="rgba(255,255,255,.6)">100</text>
+        </svg>
+      </div>
+      <div class="nps-row">
+        <div class="nps-value">61</div>
+      </div>
+    </section>
+
+    <!-- Feedback -->
+    <section class="card feedback">
+      <h3>Recent feedback</h3>
+      <div class="feed-item">
+        <div class="bullet">👍</div>
+        <div>
+          <div>OK</div>
+          <div class="tiny muted">14 days ago</div>
+        </div>
+      </div>
+      <div class="feed-item">
+        <div class="bullet">👍</div>
+        <div>
+          <div>Very Helpful!!</div>
+          <div class="tiny muted">2 months ago</div>
+        </div>
+      </div>
+      <div class="feed-item">
+        <div class="bullet">👍</div>
+        <div>
+          <div>very good "thumbs up"</div>
+          <div class="tiny muted">2 months ago</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="footer">
+    <span class="check"></span>
+    Daily pulse dashboard
+  </div>
+</body>
+</html>
